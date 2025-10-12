@@ -12,3 +12,4 @@ name = "rtw"
 path = "src/main.rs"
 
 [dependencies]
+indicatif = "0.17"

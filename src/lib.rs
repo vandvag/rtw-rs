@@ -1,6 +1,18 @@
+use indicatif::{ProgressBar, ProgressStyle};
+
 pub fn run() {
     let image_width = 256;
     let image_height = 256;
+
+    let pb = ProgressBar::new(image_height);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("{msg} [{bar:40.cyan/blue}] {pos:>3}/{len:3}")
+            .unwrap()
+            .progress_chars("=>-"),
+    );
+
+    pb.set_message("Raytracing!");
 
     println!("P3\n{} {}\n255\n", image_width, image_height);
 
@@ -18,5 +30,7 @@ pub fn run() {
 
             println!("{} {} {}", ir, ig, ib);
         }
+
+        pb.inc(1);
     }
 }
