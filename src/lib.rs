@@ -1,4 +1,5 @@
 pub mod vec;
+pub mod ray;
 
 const TOL: f64 = 1e-10;
 
