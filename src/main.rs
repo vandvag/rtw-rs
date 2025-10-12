@@ -1,4 +1,5 @@
 use indicatif::{ProgressBar, ProgressStyle};
+use rtw::vec;
 
 fn main() {
     let image_width = 256;
@@ -22,13 +23,9 @@ fn main() {
         for width in (0..image_width).map(|x| x as f64) {
             let r = width / (image_width_d - 1.0);
             let g = height / (image_height_d - 1.0);
-            let b = 0.0;
+            let pixel_color = vec::Vec3::new(r, g, 0.0);
 
-            let ir = (255.999 * r) as u8;
-            let ig = (255.999 * g) as u8;
-            let ib = (255.999 * b) as u8;
-
-            println!("{} {} {}", ir, ig, ib);
+            println!("{}", vec::Color(pixel_color));
         }
 
         pb.inc(1);
