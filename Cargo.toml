@@ -1,0 +1,14 @@
+[package]
+name = "rtw"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "rtw"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rtw"
+path = "src/main.rs"
+
+[dependencies]
