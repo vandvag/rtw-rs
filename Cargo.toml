@@ -14,3 +14,4 @@ path = "src/main.rs"
 [dependencies]
 glam = "0.30.8"
 indicatif = "0.17"
+itertools = "0.14.0"
