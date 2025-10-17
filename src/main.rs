@@ -1,5 +1,5 @@
+use glam::DVec3;
 use indicatif::{ProgressBar, ProgressStyle};
-use rtw::vec;
 
 fn main() {
     let image_width = 256;
@@ -23,9 +23,14 @@ fn main() {
         for width in (0..image_width).map(|x| x as f64) {
             let r = width / (image_width_d - 1.0);
             let g = height / (image_height_d - 1.0);
-            let pixel_color = vec::Vec3::new(r, g, 0.0);
+            let pixel_color = DVec3::new(r, g, 0.0);
 
-            println!("{}", vec::Color(pixel_color));
+            println!(
+                "{} {} {}",
+                (255.999 * pixel_color.x) as u8,
+                (255.999 * pixel_color.y) as u8,
+                (255.999 * pixel_color.z) as u8
+            );
         }
 
         pb.inc(1);
