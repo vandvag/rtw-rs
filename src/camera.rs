@@ -1,25 +1,61 @@
 use glam::DVec3;
 
+use crate::{hittable::Hittable, ray::Ray};
+use indicatif::ProgressIterator;
+use itertools::Itertools;
+
 pub struct Camera {
     /// Ratio of image width over image height
-    pub aspect_ratio: f64,
+    _aspect_ratio: f64,
     /// Rendered image width in pixel count
-    pub image_width: u32,
+    image_width: u32,
     /// Calculated image height
-    pub image_height: u32,
+    image_height: u32,
     /// Center of the camera
-    pub center: DVec3,
+    center: DVec3,
     /// Location of pixel 0, 0
-    pub pixel00_location: DVec3,
+    pixel00_location: DVec3,
     /// Offset to pixel to the right
-    pub pixel_delta_u: DVec3,
+    pixel_delta_u: DVec3,
     /// Offset to pixel below
-    pub pixel_delta_v: DVec3,
+    pixel_delta_v: DVec3,
 }
 
 impl Camera {
     pub fn init() -> CameraBuilder {
         CameraBuilder::default()
+    }
+
+    pub fn render<T>(&self, world: &T)
+    where
+        T: Hittable,
+    {
+        println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
+
+        let pixels = (0..self.image_height)
+            .cartesian_product(0..self.image_width)
+            .collect::<Vec<(u32, u32)>>()
+            .into_iter()
+            .progress_count(self.image_height as u64 * self.image_width as u64)
+            // .with_style(progress_style)
+            .map(|(h, w)| {
+                let pixel_center = self.pixel00_location
+                    + (w as f64 * self.pixel_delta_u)
+                    + (h as f64 * self.pixel_delta_v);
+                let ray = Ray::new(self.center, pixel_center - self.center);
+                let pixel_color = ray.color(world);
+
+                format!(
+                    "{} {} {}",
+                    (255.999 * pixel_color.x) as u8,
+                    (255.999 * pixel_color.y) as u8,
+                    (255.999 * pixel_color.z) as u8
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        println!("{pixels}")
     }
 }
 pub struct CameraBuilder {
@@ -58,7 +94,7 @@ impl CameraBuilder {
         let pixel00_location = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
         Camera {
-            aspect_ratio: self.aspect_ratio,
+            _aspect_ratio: self.aspect_ratio,
             image_width: self.image_width,
             image_height,
             center: DVec3::ZERO,
