@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 use glam::DVec3;
@@ -15,7 +17,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, interval: Range<f64>) -> Option<HitRecord> {
         let oc = self.center - ray.origin;
         let a = ray.direction.length_squared();
         let h = ray.direction.dot(oc);
@@ -29,9 +31,9 @@ impl Hittable for Sphere {
         let discr_sqrt = discriminant.sqrt();
         // Find the nearest root
         let mut root = (h - discr_sqrt) / a;
-        if root <= ray_tmin || root >= ray_tmax {
+        if !interval.contains(&root) {
             root = (h + discr_sqrt) / a;
-            if root <= ray_tmin || root >= ray_tmax {
+            if !interval.contains(&root) {
                 return None;
             }
         }

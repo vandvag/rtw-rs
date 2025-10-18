@@ -1,6 +1,7 @@
 pub mod sphere;
 
 use glam::DVec3;
+use std::ops::Range;
 
 use crate::ray::Ray;
 
@@ -30,16 +31,16 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, interval: Range<f64>) -> Option<HitRecord>;
 }
 
 impl<T> Hittable for Vec<T>
 where
     T: Hittable,
 {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
-        let (_closest_so_far, hr) = self.iter().fold((ray_tmax, None), |acc, object| {
-            if let Some(tmp) = object.hit(ray, ray_tmin, acc.0) {
+    fn hit(&self, ray: &Ray, interval: Range<f64>) -> Option<HitRecord> {
+        let (_closest_so_far, hr) = self.iter().fold((interval.end, None), |acc, object| {
+            if let Some(tmp) = object.hit(ray, interval.start..acc.0) {
                 (tmp.t, Some(tmp))
             } else {
                 acc

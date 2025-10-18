@@ -22,7 +22,7 @@ impl Ray {
     where
         T: Hittable,
     {
-        if let Some(hr) = world.hit(self, 0.0, f64::INFINITY) {
+        if let Some(hr) = world.hit(self, 0.0..f64::INFINITY) {
             return 0.5 * (hr.normal + DVec3::new(1.0, 1.0, 1.0));
         }
 
