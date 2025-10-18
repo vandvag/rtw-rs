@@ -4,7 +4,7 @@ use glam::DVec3;
 use rand::Rng;
 
 use crate::{hittable::Hittable, ray::Ray};
-use indicatif::ProgressIterator;
+use indicatif::{ProgressIterator, ProgressStyle};
 use itertools::Itertools;
 
 pub struct Camera {
@@ -48,6 +48,11 @@ impl Camera {
     where
         T: Hittable,
     {
+        let progress_style = ProgressStyle::default_bar()
+            .template("Raytracing! [{bar:40.cyan/blue}] {pos:>3}/{len:3}")
+            .expect("??")
+            .progress_chars("=>-");
+
         println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
 
         let scale_factor = (self.samples_per_pixel as f64).recip();
@@ -57,7 +62,7 @@ impl Camera {
             .collect::<Vec<(u32, u32)>>()
             .into_iter()
             .progress_count(self.image_height as u64 * self.image_width as u64)
-            // .with_style(progress_style)
+            .with_style(progress_style)
             .map(|(h, w)| {
                 let pixel_color = (0..self.samples_per_pixel)
                     .map(|_| self.get_ray(w, h).color(world))
