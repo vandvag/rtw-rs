@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use glam::DVec3;
 
 use crate::{hittable::Hittable, ray::Ray};
@@ -19,6 +21,19 @@ pub struct Camera {
     pixel_delta_u: DVec3,
     /// Offset to pixel below
     pixel_delta_v: DVec3,
+}
+
+struct Color(DVec3);
+
+impl Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let intensity = 0.000..0.999;
+        let g = (256.0 * self.0.y.clamp(intensity.start, intensity.end)) as u8;
+        let r = (256.0 * self.0.x.clamp(intensity.start, intensity.end)) as u8;
+        let b = (256.0 * self.0.z.clamp(intensity.start, intensity.end)) as u8;
+
+        write!(f, "{} {} {}", r, g, b)
+    }
 }
 
 impl Camera {
@@ -45,12 +60,7 @@ impl Camera {
                 let ray = Ray::new(self.center, pixel_center - self.center);
                 let pixel_color = ray.color(world);
 
-                format!(
-                    "{} {} {}",
-                    (255.999 * pixel_color.x) as u8,
-                    (255.999 * pixel_color.y) as u8,
-                    (255.999 * pixel_color.z) as u8
-                )
+                format!("{}", Color(pixel_color))
             })
             .collect::<Vec<String>>()
             .join("\n");
@@ -58,6 +68,7 @@ impl Camera {
         println!("{pixels}")
     }
 }
+
 pub struct CameraBuilder {
     aspect_ratio: f64,
     image_width: u32,
