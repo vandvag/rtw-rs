@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use glam::DVec3;
+use rand::Rng;
 
 use crate::{hittable::Hittable, ray::Ray};
 use indicatif::ProgressIterator;
@@ -21,6 +22,8 @@ pub struct Camera {
     pixel_delta_u: DVec3,
     /// Offset to pixel below
     pixel_delta_v: DVec3,
+    /// Count of random sample for each color pixel
+    samples_per_pixel: u32,
 }
 
 struct Color(DVec3);
@@ -47,6 +50,8 @@ impl Camera {
     {
         println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
 
+        let scale_factor = (self.samples_per_pixel as f64).recip();
+
         let pixels = (0..self.image_height)
             .cartesian_product(0..self.image_width)
             .collect::<Vec<(u32, u32)>>()
@@ -54,11 +59,10 @@ impl Camera {
             .progress_count(self.image_height as u64 * self.image_width as u64)
             // .with_style(progress_style)
             .map(|(h, w)| {
-                let pixel_center = self.pixel00_location
-                    + (w as f64 * self.pixel_delta_u)
-                    + (h as f64 * self.pixel_delta_v);
-                let ray = Ray::new(self.center, pixel_center - self.center);
-                let pixel_color = ray.color(world);
+                let pixel_color = (0..self.samples_per_pixel)
+                    .map(|_| self.get_ray(w, h).color(world))
+                    .sum::<DVec3>()
+                    * scale_factor;
 
                 format!("{}", Color(pixel_color))
             })
@@ -67,11 +71,24 @@ impl Camera {
 
         println!("{pixels}")
     }
+
+    fn get_ray(&self, width: u32, height: u32) -> Ray {
+        let offset = sample_square();
+        let pixel_sample = self.pixel00_location
+            + ((width as f64 + offset.x) * self.pixel_delta_u)
+            + ((height as f64 + offset.y) * self.pixel_delta_v);
+
+        Ray {
+            origin: self.center,
+            direction: pixel_sample - self.center,
+        }
+    }
 }
 
 pub struct CameraBuilder {
     aspect_ratio: f64,
     image_width: u32,
+    samples_per_pixel: u32,
 }
 
 impl Default for CameraBuilder {
@@ -79,6 +96,7 @@ impl Default for CameraBuilder {
         Self {
             aspect_ratio: 16.0 / 9.0,
             image_width: 400,
+            samples_per_pixel: 10,
         }
     }
 }
@@ -112,6 +130,7 @@ impl CameraBuilder {
             pixel00_location,
             pixel_delta_u,
             pixel_delta_v,
+            samples_per_pixel: self.samples_per_pixel,
         }
     }
 
@@ -124,4 +143,14 @@ impl CameraBuilder {
         self.aspect_ratio = aspect_ratio;
         self
     }
+
+    pub fn samples_per_pixel(mut self, samples_per_pixel: u32) -> Self {
+        self.samples_per_pixel = samples_per_pixel;
+        self
+    }
+}
+
+fn sample_square() -> DVec3 {
+    let mut rng = rand::rng();
+    DVec3::new(rng.random::<f64>() - 0.5, rng.random::<f64>() - 0.5, 0.0)
 }
