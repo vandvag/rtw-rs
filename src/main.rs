@@ -1,7 +1,7 @@
 use glam::DVec3;
 use indicatif::{ProgressIterator, ProgressStyle};
 use itertools::Itertools;
-use rtw::ray::Ray;
+use rtw::{hittable::sphere::Sphere, ray::Ray};
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
@@ -30,6 +30,11 @@ fn main() {
 
     println!("P3\n{} {}\n255\n", image_width, image_height);
 
+    let world = vec![
+        Sphere::new(DVec3::new(0.0, 0.0, -1.0), 0.5),
+        Sphere::new(DVec3::new(0.0, -100.5, -1.0), 100.0),
+    ];
+
     let pixels = (0..image_height)
         .cartesian_product(0..image_width)
         .collect::<Vec<(u64, u64)>>()
@@ -40,7 +45,7 @@ fn main() {
             let pixel_center =
                 pixel00_location + (w as f64 * pixel_delta_u) + (h as f64 * pixel_delta_v);
             let ray = Ray::new(camera_center, pixel_center - camera_center);
-            let pixel_color = ray.color();
+            let pixel_color = ray.color(&world);
 
             format!(
                 "{} {} {}",

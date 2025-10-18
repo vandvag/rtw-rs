@@ -1,6 +1,7 @@
-use glam::DVec3;
+use std::f64;
 
-use crate::hittable::sphere::Sphere;
+use crate::hittable::Hittable;
+use glam::DVec3;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {
@@ -17,12 +18,12 @@ impl Ray {
         t * self.direction + self.origin
     }
 
-    pub fn color(&self) -> DVec3 {
-        let sph = Sphere::new(DVec3::new(0.0, 0.0, -1.0), 0.5);
-        let t = sph.hit(self);
-        if t > 0.0 {
-            let N = self.at(t) - DVec3::new(0.0, 0.0, -1.0);
-            return 0.5 * DVec3::new(N.x + 1.0, N.y + 1.0, N.z + 1.0);
+    pub fn color<T>(&self, world: &T) -> DVec3
+    where
+        T: Hittable,
+    {
+        if let Some(hr) = world.hit(self, 0.0, f64::INFINITY) {
+            return 0.5 * (hr.normal + DVec3::new(1.0, 1.0, 1.0));
         }
 
         let unit_dir = self.direction.normalize();

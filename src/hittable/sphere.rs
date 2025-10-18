@@ -1,3 +1,4 @@
+use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 use glam::DVec3;
 
@@ -8,10 +9,13 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(center: DVec3, radius: f64) -> Self {
+        assert!(radius >= 0.0, "Sphere radius must be non-negative");
         Self { center, radius }
     }
+}
 
-    pub fn hit(self, ray: &Ray) -> f64 {
+impl Hittable for Sphere {
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
         let oc = self.center - ray.origin;
         let a = ray.direction.length_squared();
         let h = ray.direction.dot(oc);
@@ -19,9 +23,21 @@ impl Sphere {
         let discriminant = h * h - a * c;
 
         if discriminant < 0.0 {
-            return -1.0;
+            return None;
         }
 
-        (h - discriminant.sqrt()) / a
+        let discr_sqrt = discriminant.sqrt();
+        // Find the nearest root
+        let mut root = (h - discr_sqrt) / a;
+        if root <= ray_tmin || root >= ray_tmax {
+            root = (h + discr_sqrt) / a;
+            if root <= ray_tmin || root >= ray_tmax {
+                return None;
+            }
+        }
+
+        let p = ray.at(root);
+        let normal = (p - self.center) / self.radius;
+        Some(HitRecord::init(p, normal, root, ray))
     }
 }

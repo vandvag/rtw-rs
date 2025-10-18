@@ -1,3 +1,2 @@
 pub mod ray;
-
-mod hittable;
+pub mod hittable;
