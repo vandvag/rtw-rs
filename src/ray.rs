@@ -1,6 +1,6 @@
 use glam::DVec3;
 
-use crate::shapes::sphere::Sphere;
+use crate::hittable::sphere::Sphere;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {

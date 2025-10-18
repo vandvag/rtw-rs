@@ -1,3 +1,3 @@
 pub mod ray;
 
-mod shapes;
+mod hittable;
