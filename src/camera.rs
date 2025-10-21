@@ -24,6 +24,8 @@ pub struct Camera {
     pixel_delta_v: DVec3,
     /// Count of random sample for each color pixel
     samples_per_pixel: u32,
+    /// Maximum number of ray bounces into scene
+    max_depth: u32,
 }
 
 struct Color(DVec3);
@@ -65,7 +67,7 @@ impl Camera {
             .with_style(progress_style)
             .map(|(h, w)| {
                 let pixel_color = (0..self.samples_per_pixel)
-                    .map(|_| self.get_ray(w, h).color(world))
+                    .map(|_| self.get_ray(w, h).color(world, self.max_depth))
                     .sum::<DVec3>()
                     * scale_factor;
 
@@ -94,6 +96,7 @@ pub struct CameraBuilder {
     aspect_ratio: f64,
     image_width: u32,
     samples_per_pixel: u32,
+    max_depth: u32,
 }
 
 impl Default for CameraBuilder {
@@ -102,6 +105,7 @@ impl Default for CameraBuilder {
             aspect_ratio: 16.0 / 9.0,
             image_width: 400,
             samples_per_pixel: 10,
+            max_depth: 10,
         }
     }
 }
@@ -136,6 +140,7 @@ impl CameraBuilder {
             pixel_delta_u,
             pixel_delta_v,
             samples_per_pixel: self.samples_per_pixel,
+            max_depth: self.max_depth,
         }
     }
 
@@ -151,6 +156,11 @@ impl CameraBuilder {
 
     pub fn samples_per_pixel(mut self, samples_per_pixel: u32) -> Self {
         self.samples_per_pixel = samples_per_pixel;
+        self
+    }
+
+    pub fn max_depth(mut self, max_depth: u32) -> Self {
+        self.max_depth = max_depth;
         self
     }
 }

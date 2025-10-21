@@ -18,12 +18,17 @@ impl Ray {
         t * self.direction + self.origin
     }
 
-    pub fn color<T>(&self, world: &T) -> DVec3
+    pub fn color<T>(&self, world: &T, depth: u32) -> DVec3
     where
         T: Hittable,
     {
+        if depth == 0 {
+            return DVec3::ZERO;
+        }
+
         if let Some(hr) = world.hit(self, 0.0..f64::INFINITY) {
-            return 0.5 * (hr.normal + DVec3::new(1.0, 1.0, 1.0));
+            let direction = crate::random_on_hemisphere(hr.normal);
+            return 0.5 * Ray::color(&Ray::new(hr.point, direction), world, depth - 1);
         }
 
         let unit_dir = self.direction.normalize();
