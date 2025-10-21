@@ -26,7 +26,7 @@ impl Ray {
             return DVec3::ZERO;
         }
 
-        if let Some(hr) = world.hit(self, 0.0..f64::INFINITY) {
+        if let Some(hr) = world.hit(self, 0.001..f64::INFINITY) {
             let direction = crate::random_on_hemisphere(hr.normal);
             return 0.5 * Ray::color(&Ray::new(hr.point, direction), world, depth - 1);
         }
