@@ -3,7 +3,7 @@ use std::fmt::Display;
 use glam::DVec3;
 use rand::Rng;
 
-use crate::{hittable::Hittable, ray::Ray};
+use crate::{hittable::Hittable, linear_to_gamma, ray::Ray};
 use indicatif::{ProgressIterator, ProgressStyle};
 use itertools::Itertools;
 
@@ -33,9 +33,9 @@ struct Color(DVec3);
 impl Display for Color {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let intensity = 0.000..0.999;
-        let g = (256.0 * self.0.y.clamp(intensity.start, intensity.end)) as u8;
-        let r = (256.0 * self.0.x.clamp(intensity.start, intensity.end)) as u8;
-        let b = (256.0 * self.0.z.clamp(intensity.start, intensity.end)) as u8;
+        let r = (256.0 * linear_to_gamma(self.0.x).clamp(intensity.start, intensity.end)) as u8;
+        let g = (256.0 * linear_to_gamma(self.0.y).clamp(intensity.start, intensity.end)) as u8;
+        let b = (256.0 * linear_to_gamma(self.0.z).clamp(intensity.start, intensity.end)) as u8;
 
         write!(f, "{} {} {}", r, g, b)
     }

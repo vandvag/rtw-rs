@@ -28,7 +28,7 @@ impl Ray {
 
         if let Some(hr) = world.hit(self, 0.001..f64::INFINITY) {
             let direction = hr.normal + crate::random_unit_vector();
-            return 0.5 * Ray::color(&Ray::new(hr.point, direction), world, depth - 1);
+            return 0.1 * Ray::color(&Ray::new(hr.point, direction), world, depth - 1);
         }
 
         let unit_dir = self.direction.normalize();
