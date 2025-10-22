@@ -1,19 +1,20 @@
 pub mod sphere;
 
 use glam::DVec3;
-use std::ops::Range;
+use std::{ops::Range, rc::Rc};
 
-use crate::ray::Ray;
+use crate::{material::Material, ray::Ray};
 
 pub struct HitRecord {
     pub point: DVec3,
     pub normal: DVec3,
     pub t: f64,
     pub front_face: bool,
+    pub material: Rc<dyn Material>,
 }
 
 impl HitRecord {
-    pub fn init(point: DVec3, outward_normal: DVec3, t: f64, ray: &Ray) -> Self {
+    pub fn init(point: DVec3, outward_normal: DVec3, t: f64, ray: &Ray, mat: Rc<dyn Material>) -> Self {
         let front_face = ray.direction.dot(outward_normal) < 0.0;
         let normal = if front_face {
             outward_normal
@@ -26,6 +27,7 @@ impl HitRecord {
             normal,
             t,
             front_face,
+            material: mat
         }
     }
 }

@@ -1,18 +1,25 @@
-use std::ops::Range;
+use std::ops::{Range};
+use std::rc::Rc;
 
 use crate::hittable::{HitRecord, Hittable};
+use crate::material::Material;
 use crate::ray::Ray;
 use glam::DVec3;
 
 pub struct Sphere {
     pub center: DVec3,
     pub radius: f64,
+    pub mat: Rc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: DVec3, radius: f64) -> Self {
+    pub fn new(center: DVec3, radius: f64, mat: Rc<dyn Material>) -> Self {
         assert!(radius >= 0.0, "Sphere radius must be non-negative");
-        Self { center, radius }
+        Self {
+            center,
+            radius,
+            mat,
+        }
     }
 }
 
@@ -40,6 +47,6 @@ impl Hittable for Sphere {
 
         let p = ray.at(root);
         let normal = (p - self.center) / self.radius;
-        Some(HitRecord::init(p, normal, root, ray))
+        Some(HitRecord::init(p, normal, root, ray, self.mat.clone()))
     }
 }

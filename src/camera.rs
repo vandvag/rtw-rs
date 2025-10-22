@@ -3,7 +3,7 @@ use std::fmt::Display;
 use glam::DVec3;
 use rand::Rng;
 
-use crate::{hittable::Hittable, linear_to_gamma, ray::Ray};
+use crate::{hittable::Hittable, ray::Ray, utils::gamma::linear_to_gamma};
 use indicatif::{ProgressIterator, ProgressStyle};
 use itertools::Itertools;
 

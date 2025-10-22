@@ -27,8 +27,10 @@ impl Ray {
         }
 
         if let Some(hr) = world.hit(self, 0.001..f64::INFINITY) {
-            let direction = hr.normal + crate::random_unit_vector();
-            return 0.1 * Ray::color(&Ray::new(hr.point, direction), world, depth - 1);
+            if let Some(scatter) = hr.material.scatter(self, &hr) {
+                return scatter.attenuation * Ray::color(&scatter.scattered, world, depth - 1);
+            }
+            return DVec3::ZERO;
         }
 
         let unit_dir = self.direction.normalize();
