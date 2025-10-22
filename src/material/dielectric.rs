@@ -4,7 +4,7 @@ use crate::{
     hittable::HitRecord,
     material::{Material, Scatter},
     ray::Ray,
-    utils::vec::refract,
+    utils::vec::{reflect, refract},
 };
 
 pub struct Dielectric {
@@ -21,9 +21,16 @@ impl Material for Dielectric {
         };
 
         let unit_direction = ray.direction.normalize();
-        let refracted = refract(unit_direction, hr.normal, ri);
+        let cos_theta = f64::min(1.0, hr.normal.dot(-unit_direction));
+        let sin_theta = (1.0 - cos_theta).sqrt();
+        let cannot_refract = ri * sin_theta > 1.0;
+        let direction = if cannot_refract {
+            reflect(unit_direction, hr.normal)
+        } else {
+            refract(unit_direction, hr.normal, ri)
+        };
 
-        let scattered = Ray::new(hr.point, refracted);
+        let scattered = Ray::new(hr.point, direction);
 
         Some(Scatter {
             scattered,

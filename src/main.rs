@@ -19,7 +19,7 @@ fn main() {
     };
 
     let material_left = Dielectric {
-        refraction_index: 1.50
+        refraction_index: 1.0 / 1.33
     };
 
     let material_right = Metal {
