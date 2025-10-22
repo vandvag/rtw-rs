@@ -1,3 +1,4 @@
+
 use glam::DVec3;
 use rand::Rng;
 
@@ -37,4 +38,12 @@ pub(crate) fn random_on_hemisphere(normal: glam::DVec3) -> glam::DVec3 {
     }
 
     -on_unit_sphere
+}
+
+pub(crate) fn refract(uv: DVec3, n: DVec3, etai_over_etat: f64) -> DVec3 {
+    let cos_theta = f64::min(n.dot(-uv), 1.0);
+    let r_out_perp = etai_over_etat * (uv + cos_theta * n);
+    let r_out_paralel = -((1.0 - r_out_perp.length_squared()).abs()).sqrt() * n;
+
+    r_out_perp + r_out_paralel
 }

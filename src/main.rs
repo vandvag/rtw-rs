@@ -4,7 +4,7 @@ use glam::DVec3;
 use rtw::{
     camera::Camera,
     hittable::sphere::Sphere,
-    material::{lambertian::Lambertian, metal::Metal},
+    material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal},
 };
 
 fn main() {
@@ -18,9 +18,8 @@ fn main() {
         albedo: DVec3::new(0.1, 0.2, 0.5),
     };
 
-    let material_left = Metal {
-        albedo: DVec3::new(0.8, 0.8, 0.8),
-        fuzz: 0.3
+    let material_left = Dielectric {
+        refraction_index: 1.50
     };
 
     let material_right = Metal {
