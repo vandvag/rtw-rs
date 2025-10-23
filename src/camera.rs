@@ -26,6 +26,20 @@ pub struct Camera {
     samples_per_pixel: u32,
     /// Maximum number of ray bounces into scene
     max_depth: u32,
+    /// Vertical view angle (field of view)
+    vfov: f64,
+    /// Point camera is looking from
+    look_from: DVec3,
+    /// Point camera is looking at
+    look_at: DVec3,
+    /// Camera "up" direction
+    vup: DVec3,
+    /// X axis basis vector
+    u: DVec3,
+    /// Y axis basis vector
+    v: DVec3,
+    /// Z axis basis vector
+    w: DVec3,
 }
 
 struct Color(DVec3);
@@ -97,6 +111,10 @@ pub struct CameraBuilder {
     image_width: u32,
     samples_per_pixel: u32,
     max_depth: u32,
+    vfov: f64,
+    look_from: DVec3,
+    look_at: DVec3,
+    vup: DVec3,
 }
 
 impl Default for CameraBuilder {
@@ -106,6 +124,10 @@ impl Default for CameraBuilder {
             image_width: 400,
             samples_per_pixel: 10,
             max_depth: 10,
+            vfov: 90.0,
+            look_from: DVec3::ZERO,
+            look_at: DVec3::new(0.0, 0.0, -1.0),
+            vup: DVec3::new(0.0, 1.0, 0.0),
         }
     }
 }
@@ -117,30 +139,40 @@ impl CameraBuilder {
         } else {
             ((self.image_width as f64) / self.aspect_ratio) as u32
         };
-        let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let center = self.look_from;
+        let focal_length = (self.look_from - self.look_at).length();
+        let theta = self.vfov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (self.image_width as f64 / image_height as f64);
-        let camera_center = DVec3::ZERO;
-        let viewport_u = DVec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = DVec3::new(0.0, -viewport_height, 0.0);
+        let w = (self.look_from - self.look_at).normalize();
+        let u = self.vup.cross(w).normalize();
+        let v = w.cross(u);
+        let viewport_u = viewport_width * u;
+        let viewport_v = viewport_height * -v;
         let pixel_delta_u = viewport_u / self.image_width as f64;
         let pixel_delta_v = viewport_v / image_height as f64;
-        let viewport_upper_left = camera_center
-            - DVec3::new(0.0, 0.0, focal_length)
-            - viewport_u / 2.0
-            - viewport_v / 2.0;
+        let viewport_upper_left =
+            center - (viewport_u / 2.0) + (viewport_v / 2.0) - (focal_length * w);
         let pixel00_location = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
         Camera {
             _aspect_ratio: self.aspect_ratio,
             image_width: self.image_width,
             image_height,
-            center: DVec3::ZERO,
+            center,
             pixel00_location,
             pixel_delta_u,
             pixel_delta_v,
             samples_per_pixel: self.samples_per_pixel,
             max_depth: self.max_depth,
+            vfov: self.vfov,
+            look_from: self.look_from,
+            look_at: self.look_at,
+            vup: self.vup,
+            u,
+            v,
+            w,
         }
     }
 
@@ -161,6 +193,26 @@ impl CameraBuilder {
 
     pub fn max_depth(mut self, max_depth: u32) -> Self {
         self.max_depth = max_depth;
+        self
+    }
+
+    pub fn vfov(mut self, vfov: f64) -> Self {
+        self.vfov = vfov;
+        self
+    }
+
+    pub fn look_from(mut self, look_from: DVec3) -> Self {
+        self.look_from = look_from;
+        self
+    }
+
+    pub fn look_at(mut self, look_at: DVec3) -> Self {
+        self.look_at = look_at;
+        self
+    }
+
+    pub fn vup(mut self, vup: DVec3) -> Self {
+        self.vup = vup;
         self
     }
 }

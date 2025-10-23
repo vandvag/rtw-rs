@@ -7,7 +7,7 @@ use rtw::{
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal},
 };
 
-fn main() {
+fn scene1() {
     let camera = Camera::init().image_width(1000).max_depth(50).build();
 
     let material_ground = Arc::new(Lambertian {
@@ -39,4 +39,8 @@ fn main() {
     ];
 
     camera.render(&world);
+}
+
+fn main() {
+    scene1();
 }
