@@ -1,5 +1,5 @@
 use std::ops::{Range};
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
@@ -9,11 +9,11 @@ use glam::DVec3;
 pub struct Sphere {
     pub center: DVec3,
     pub radius: f64,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: DVec3, radius: f64, mat: Rc<dyn Material>) -> Self {
+    pub fn new(center: DVec3, radius: f64, mat: Arc<dyn Material>) -> Self {
         assert!(radius >= 0.0, "Sphere radius must be non-negative");
         Self {
             center,
