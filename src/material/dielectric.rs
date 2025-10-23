@@ -11,6 +11,13 @@ pub struct Dielectric {
     pub refraction_index: f64,
 }
 
+fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
+    // Use Schlick's approximation for reflectance.
+    let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
+    let r0 = r0 * r0;
+    r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+}
+
 impl Material for Dielectric {
     fn scatter(&self, ray: &Ray, hr: &HitRecord) -> Option<Scatter> {
         let attenuation = DVec3::ONE;
@@ -24,7 +31,7 @@ impl Material for Dielectric {
         let cos_theta = f64::min(1.0, hr.normal.dot(-unit_direction));
         let sin_theta = (1.0 - cos_theta).sqrt();
         let cannot_refract = ri * sin_theta > 1.0;
-        let direction = if cannot_refract {
+        let direction = if cannot_refract || reflectance(cos_theta, ri) > rand::random() {
             reflect(unit_direction, hr.normal)
         } else {
             refract(unit_direction, hr.normal, ri)
