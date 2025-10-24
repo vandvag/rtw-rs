@@ -3,5 +3,5 @@ pub mod hittable;
 pub mod ray;
 pub mod material;
 
-mod utils;
+pub mod utils;
 

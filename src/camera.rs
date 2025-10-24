@@ -3,7 +3,11 @@ use std::fmt::Display;
 use glam::DVec3;
 use rand::Rng;
 
-use crate::{hittable::Hittable, ray::Ray, utils::gamma::linear_to_gamma};
+use crate::{
+    hittable::Hittable,
+    ray::Ray,
+    utils::{gamma::linear_to_gamma, vec::random_in_unit_disk},
+};
 use indicatif::{ProgressIterator, ProgressStyle};
 use itertools::Itertools;
 
@@ -40,6 +44,14 @@ pub struct Camera {
     v: DVec3,
     /// Z axis basis vector
     w: DVec3,
+    /// Variation angle of rays through each pixel
+    defocus_angle: f64,
+    /// Distance from camera lookfrom point to plane of perfect focus
+    defocus_distance: f64,
+    /// Defocus disk horizontal radius
+    defocus_disk_u: DVec3,
+    /// Defocus disk vertical radius
+    defocus_disk_v: DVec3,
 }
 
 struct Color(DVec3);
@@ -99,10 +111,21 @@ impl Camera {
             + ((width as f64 + offset.x) * self.pixel_delta_u)
             + ((height as f64 + offset.y) * self.pixel_delta_v);
 
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.center
+        } else {
+            self.defocus_disk_sample()
+        };
+
         Ray {
-            origin: self.center,
+            origin: ray_origin,
             direction: pixel_sample - self.center,
         }
+    }
+
+    fn defocus_disk_sample(&self) -> DVec3 {
+        let p = random_in_unit_disk();
+        self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
     }
 }
 
@@ -115,6 +138,8 @@ pub struct CameraBuilder {
     look_from: DVec3,
     look_at: DVec3,
     vup: DVec3,
+    defocus_angle: f64,
+    defocus_distance: f64,
 }
 
 impl Default for CameraBuilder {
@@ -128,6 +153,8 @@ impl Default for CameraBuilder {
             look_from: DVec3::ZERO,
             look_at: DVec3::new(0.0, 0.0, -1.0),
             vup: DVec3::new(0.0, 1.0, 0.0),
+            defocus_angle: 0.0,
+            defocus_distance: 10.0,
         }
     }
 }
@@ -140,10 +167,9 @@ impl CameraBuilder {
             ((self.image_width as f64) / self.aspect_ratio) as u32
         };
         let center = self.look_from;
-        let focal_length = (self.look_from - self.look_at).length();
         let theta = self.vfov.to_radians();
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * self.defocus_distance;
         let viewport_width = viewport_height * (self.image_width as f64 / image_height as f64);
         let w = (self.look_from - self.look_at).normalize();
         let u = self.vup.cross(w).normalize();
@@ -153,8 +179,11 @@ impl CameraBuilder {
         let pixel_delta_u = viewport_u / self.image_width as f64;
         let pixel_delta_v = viewport_v / image_height as f64;
         let viewport_upper_left =
-            center - (viewport_u / 2.0) + (viewport_v / 2.0) - (focal_length * w);
+            center - (viewport_u / 2.0) + (viewport_v / 2.0) - (self.defocus_distance * w);
         let pixel00_location = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+        let defocus_radius = self.defocus_distance * (self.defocus_angle.to_radians()).tan();
+        let defocus_disk_u = u * defocus_radius;
+        let defocus_disk_v = v * defocus_radius;
 
         Camera {
             _aspect_ratio: self.aspect_ratio,
@@ -173,6 +202,10 @@ impl CameraBuilder {
             u,
             v,
             w,
+            defocus_angle: self.defocus_angle,
+            defocus_distance: self.defocus_distance,
+            defocus_disk_u,
+            defocus_disk_v,
         }
     }
 
@@ -213,6 +246,16 @@ impl CameraBuilder {
 
     pub fn vup(mut self, vup: DVec3) -> Self {
         self.vup = vup;
+        self
+    }
+
+    pub fn defocus_angle(mut self, angle: f64) -> Self {
+        self.defocus_angle = angle;
+        self
+    }
+
+    pub fn defocus_distance(mut self, distance: f64) -> Self {
+        self.defocus_distance = distance;
         self
     }
 }

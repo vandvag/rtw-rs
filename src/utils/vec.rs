@@ -1,4 +1,3 @@
-
 use glam::DVec3;
 use rand::Rng;
 
@@ -6,12 +5,12 @@ pub(crate) fn reflect(v: DVec3, n: DVec3) -> DVec3 {
     v - 2.0 * v.dot(n) * n
 }
 
-pub(crate) fn random() -> glam::DVec3 {
+pub fn random() -> glam::DVec3 {
     let mut rng = rand::rng();
     glam::DVec3::new(rng.random(), rng.random(), rng.random())
 }
 
-pub(crate) fn random_range(range: std::ops::Range<f64>) -> glam::DVec3 {
+pub fn random_range(range: std::ops::Range<f64>) -> glam::DVec3 {
     let mut rng = rand::rng();
     glam::DVec3::new(
         rng.random_range(range.clone()),
@@ -46,4 +45,18 @@ pub(crate) fn refract(uv: DVec3, n: DVec3, etai_over_etat: f64) -> DVec3 {
     let r_out_paralel = -((1.0 - r_out_perp.length_squared()).abs()).sqrt() * n;
 
     r_out_perp + r_out_paralel
+}
+
+pub(crate) fn random_in_unit_disk() -> DVec3 {
+    let mut rng = rand::rng();
+    loop {
+        let p = DVec3::new(
+            rng.random_range(-1.0..1.0),
+            rng.random_range(-1.0..1.0),
+            0.0,
+        );
+        if p.length_squared() < 1.0 {
+            return p;
+        }
+    }
 }
