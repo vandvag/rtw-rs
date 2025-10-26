@@ -83,26 +83,27 @@ impl Camera {
 
         println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
 
-        let scale_factor = (self.samples_per_pixel as f64).recip();
-
         let pixels = (0..self.image_height)
             .cartesian_product(0..self.image_width)
             .collect::<Vec<(u32, u32)>>()
             .into_iter()
             .progress_count(self.image_height as u64 * self.image_width as u64)
             .with_style(progress_style)
-            .map(|(h, w)| {
-                let pixel_color = (0..self.samples_per_pixel)
-                    .map(|_| self.get_ray(w, h).color(world, self.max_depth))
-                    .sum::<DVec3>()
-                    * scale_factor;
-
-                format!("{}", Color(pixel_color))
-            })
+            .map(|(h, w)| format!("{}", Color(self.render_pixel(w, h, world))))
             .collect::<Vec<String>>()
             .join("\n");
 
         println!("{pixels}")
+    }
+
+    fn render_pixel<T>(&self, width: u32, height: u32, world: &T) -> DVec3
+    where
+        T: Hittable,
+    {
+        (0..self.samples_per_pixel)
+            .map(|_| self.get_ray(width, height).color(world, self.max_depth))
+            .sum::<DVec3>()
+            / (self.samples_per_pixel as f64)
     }
 
     fn get_ray(&self, width: u32, height: u32) -> Ray {
