@@ -55,17 +55,26 @@ pub struct Camera {
     defocus_disk_v: DVec3,
 }
 
-// TODO: This should really be a struct with (r,g,b), that performs the conversion
-struct Color(DVec3);
+struct Color {
+    r: u8,
+    g: u8,
+    b: u8,
+}
+
+impl From<DVec3> for Color {
+    fn from(value: DVec3) -> Self {
+        let intensity = 0.000..0.999;
+        Self {
+            r: (256.0 * linear_to_gamma(value.x).clamp(intensity.start, intensity.end)) as u8,
+            g: (256.0 * linear_to_gamma(value.y).clamp(intensity.start, intensity.end)) as u8,
+            b: (256.0 * linear_to_gamma(value.z).clamp(intensity.start, intensity.end)) as u8,
+        }
+    }
+}
 
 impl Display for Color {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let intensity = 0.000..0.999;
-        let r = (256.0 * linear_to_gamma(self.0.x).clamp(intensity.start, intensity.end)) as u8;
-        let g = (256.0 * linear_to_gamma(self.0.y).clamp(intensity.start, intensity.end)) as u8;
-        let b = (256.0 * linear_to_gamma(self.0.z).clamp(intensity.start, intensity.end)) as u8;
-
-        write!(f, "{} {} {}", r, g, b)
+        write!(f, "{} {} {}", self.r, self.g, self.b)
     }
 }
 
@@ -101,7 +110,7 @@ impl Camera {
             .into_iter()
             .progress_count(self.image_height as u64 * self.image_width as u64)
             .with_style(progress_style)
-            .map(|(h, w)| format!("{}", Color(self.render_pixel(w, h, world))))
+            .map(|(h, w)| format!("{}", Color::from(self.render_pixel(w, h, world))))
             .collect::<Vec<String>>()
             .join("\n")
     }
