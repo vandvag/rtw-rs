@@ -10,7 +10,15 @@ use rtw::{
 };
 
 fn scene1() {
-    let camera = Camera::init().image_width(1000).max_depth(50).build();
+    let camera = Camera::init()
+        .aspect_ratio(16.0 / 9.0)
+        .image_width(1000)
+        .max_depth(50)
+        .samples_per_pixel(10)
+        .look_from(DVec3::new(-2.0, 2.0, 1.0))
+        .look_at(DVec3::new(0.0, 0.0, -1.0))
+        .vup(DVec3::new(0.0, 1.0, 0.0))
+        .build();
 
     let material_ground = Arc::new(Lambertian {
         albedo: DVec3::new(0.8, 0.8, 0.0),
@@ -21,7 +29,11 @@ fn scene1() {
     });
 
     let material_left = Arc::new(Dielectric {
-        refraction_index: 1.0 / 1.33,
+        refraction_index: 1.5,
+    });
+
+    let material_bubble = Arc::new(Dielectric {
+        refraction_index: 1.00 / 1.50,
     });
 
     let material_right = Arc::new(Metal {
@@ -36,8 +48,9 @@ fn scene1() {
             material_ground.clone(),
         ),
         Sphere::new(DVec3::new(0.0, 0.0, -1.2), 0.5, material_center.clone()),
-        Sphere::new(DVec3::new(-1.0, 0.0, -1.0), 0.5, material_right.clone()),
-        Sphere::new(DVec3::new(1.0, 0.0, -1.0), 0.5, material_left.clone()),
+        Sphere::new(DVec3::new(-1.0, 0.0, -1.0), 0.5, material_left.clone()),
+        Sphere::new(DVec3::new(-1.0, 0.0, -1.0), 0.4, material_bubble.clone()),
+        Sphere::new(DVec3::new(1.0, 0.0, -1.0), 0.5, material_right.clone()),
     ];
 
     camera.render(&world);
@@ -133,5 +146,5 @@ fn scene2() {
 }
 
 fn main() {
-    scene2();
+    scene1();
 }
