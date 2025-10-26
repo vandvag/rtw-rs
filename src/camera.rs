@@ -14,7 +14,7 @@ use itertools::Itertools;
 #[allow(dead_code)]
 pub struct Camera {
     /// Ratio of image width over image height
-    _aspect_ratio: f64,
+    aspect_ratio: f64,
     /// Rendered image width in pixel count
     image_width: u32,
     /// Calculated image height
@@ -48,7 +48,7 @@ pub struct Camera {
     /// Variation angle of rays through each pixel
     defocus_angle: f64,
     /// Distance from camera lookfrom point to plane of perfect focus
-    defocus_distance: f64,
+    focus_distance: f64,
     /// Defocus disk horizontal radius
     defocus_disk_u: DVec3,
     /// Defocus disk vertical radius
@@ -203,7 +203,7 @@ impl CameraBuilder {
         let defocus_disk_v = v * defocus_radius;
 
         Camera {
-            _aspect_ratio: self.aspect_ratio,
+            aspect_ratio: self.aspect_ratio,
             image_width: self.image_width,
             image_height,
             center,
@@ -220,7 +220,7 @@ impl CameraBuilder {
             v,
             w,
             defocus_angle: self.defocus_angle,
-            defocus_distance: self.defocus_distance,
+            focus_distance: self.defocus_distance,
             defocus_disk_u,
             defocus_disk_v,
         }
@@ -281,4 +281,3 @@ fn sample_square() -> DVec3 {
     let mut rng = rand::rng();
     DVec3::new(rng.random::<f64>() - 0.5, rng.random::<f64>() - 0.5, 0.0)
 }
-
