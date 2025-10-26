@@ -13,6 +13,8 @@ use crate::{
     utils::{gamma::linear_to_gamma, vec::random_in_unit_disk},
 };
 
+const MULTI_THREADED: bool = true;
+
 #[allow(dead_code)]
 pub struct Camera {
     /// Ratio of image width over image height
@@ -89,12 +91,66 @@ impl Camera {
     where
         T: Hittable,
     {
-        let pixels = self.get_pixel_string(world);
+        let pixels = if MULTI_THREADED {
+            self.get_pixel_string_par(world)
+        } else {
+            self.get_pixel_string(world)
+        };
 
         println!(
             "P3\n{} {}\n255\n{}",
             self.image_width, self.image_height, pixels
         )
+    }
+
+    fn get_pixel_string_par<T>(&self, world: &T) -> String
+    where
+        T: Hittable,
+    {
+        let total_pixels = self.image_width as usize * self.image_height as usize;
+        let mut out: Vec<String> = Vec::with_capacity(total_pixels);
+
+        let available_threads = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1);
+
+        std::thread::scope(|scope| {
+            let columns_per_thread = (self.image_height as usize).div_ceil(available_threads);
+
+            let mut handles = Vec::with_capacity(available_threads);
+            for chunk_idx in 0..available_threads {
+                let start_column = chunk_idx * columns_per_thread;
+                if start_column >= self.image_height as usize {
+                    break;
+                }
+                let end_column =
+                    ((chunk_idx + 1) * columns_per_thread).min(self.image_height as usize);
+
+                handles.push(scope.spawn(move || {
+                    let mut chunk_out = Vec::with_capacity(
+                        (end_column - start_column) * (self.image_width as usize),
+                    );
+
+                    for h in start_column..end_column {
+                        for w in 0..self.image_width {
+                            chunk_out.push(format!(
+                                "{}",
+                                Color::from(self.render_pixel(w, h as u32, world))
+                            ));
+                        }
+                    }
+                    chunk_out
+                }));
+            }
+
+            for handle in handles {
+                // TODO: Handle result!
+                let handle_out = handle.join().unwrap();
+                out.extend_from_slice(&handle_out);
+            }
+        });
+
+        out.join("\n")
     }
 
     fn get_pixel_string<T>(&self, world: &T) -> String

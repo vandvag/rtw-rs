@@ -12,8 +12,8 @@ use rtw::{
 fn scene1() {
     let camera = Camera::init()
         .aspect_ratio(16.0 / 9.0)
-        .image_width(400)
-        .max_depth(10)
+        .image_width(1000)
+        .max_depth(50)
         .samples_per_pixel(10)
         .look_from(DVec3::new(-2.0, 2.0, 1.0))
         .look_at(DVec3::new(0.0, 0.0, -1.0))
