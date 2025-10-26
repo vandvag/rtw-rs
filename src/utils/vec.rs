@@ -29,16 +29,6 @@ pub(crate) fn random_unit_vector() -> glam::DVec3 {
     }
 }
 
-pub(crate) fn random_on_hemisphere(normal: glam::DVec3) -> glam::DVec3 {
-    let on_unit_sphere = random_unit_vector();
-
-    if on_unit_sphere.dot(normal) > 0.0 {
-        return on_unit_sphere;
-    }
-
-    -on_unit_sphere
-}
-
 pub(crate) fn refract(uv: DVec3, n: DVec3, etai_over_etat: f64) -> DVec3 {
     let cos_theta = f64::min(n.dot(-uv), 1.0);
     let r_out_perp = etai_over_etat * (uv + cos_theta * n);

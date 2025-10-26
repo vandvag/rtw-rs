@@ -11,6 +11,7 @@ use crate::{
 use indicatif::{ProgressIterator, ProgressStyle};
 use itertools::Itertools;
 
+#[allow(dead_code)]
 pub struct Camera {
     /// Ratio of image width over image height
     _aspect_ratio: f64,
