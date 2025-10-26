@@ -1,10 +1,13 @@
 mod builder;
 
 use glam::DVec3;
-use indicatif::{ProgressIterator, ProgressStyle};
+use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use itertools::Itertools;
 use rand::Rng;
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    sync::{Arc, atomic::AtomicU64},
+};
 
 use crate::{
     RenderConfig,
@@ -13,8 +16,6 @@ use crate::{
     ray::Ray,
     utils::{gamma::linear_to_gamma, vec::random_in_unit_disk},
 };
-
-const MULTI_THREADED: bool = true;
 
 #[allow(dead_code)]
 pub struct Camera {
@@ -118,6 +119,11 @@ impl Camera {
             .map(|n| n.get())
             .unwrap_or(1);
 
+        let pixel_counter = Arc::new(AtomicU64::new(0));
+        let bar = Arc::new(
+            ProgressBar::new(total_pixels as u64).with_style(Self::get_progress_bar_style()),
+        );
+
         std::thread::scope(|scope| {
             let columns_per_thread = (self.image_height as usize).div_ceil(available_threads);
 
@@ -130,6 +136,9 @@ impl Camera {
                 let end_column =
                     ((chunk_idx + 1) * columns_per_thread).min(self.image_height as usize);
 
+                let thread_pixel_counter = Arc::clone(&pixel_counter);
+                let thread_bar = Arc::clone(&bar);
+
                 handles.push(scope.spawn(move || {
                     let mut chunk_out = Vec::with_capacity(
                         (end_column - start_column) * (self.image_width as usize),
@@ -141,6 +150,10 @@ impl Camera {
                                 "{}",
                                 Color::from(self.render_pixel(w, h as u32, world))
                             ));
+                            thread_pixel_counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            thread_bar.set_position(
+                                thread_pixel_counter.load(std::sync::atomic::Ordering::Relaxed),
+                            );
                         }
                     }
                     chunk_out
@@ -154,6 +167,8 @@ impl Camera {
             }
         });
 
+        bar.finish();
+
         out.join("\n")
     }
 
@@ -161,17 +176,12 @@ impl Camera {
     where
         T: Hittable,
     {
-        let progress_style = ProgressStyle::default_bar()
-            .template("Raytracing! [{bar:40.cyan/blue}] {pos:>3}/{len:3}")
-            .expect("??")
-            .progress_chars("=>-");
-
         (0..self.image_height)
             .cartesian_product(0..self.image_width)
             .collect::<Vec<(u32, u32)>>()
             .into_iter()
             .progress_count(self.image_height as u64 * self.image_width as u64)
-            .with_style(progress_style)
+            .with_style(Self::get_progress_bar_style())
             .map(|(h, w)| format!("{}", Color::from(self.render_pixel(w, h, world))))
             .collect::<Vec<String>>()
             .join("\n")
@@ -208,6 +218,13 @@ impl Camera {
     fn defocus_disk_sample(&self) -> DVec3 {
         let p = random_in_unit_disk();
         self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
+    }
+
+    fn get_progress_bar_style() -> ProgressStyle {
+        ProgressStyle::default_bar()
+            .template("Raytracing! [{bar:40.cyan/blue}] {pos:>3}/{len:3}")
+            .expect("??")
+            .progress_chars("=>-")
     }
 }
 
