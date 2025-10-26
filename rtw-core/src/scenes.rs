@@ -2,14 +2,14 @@ use glam::DVec3;
 use rand::Rng;
 use std::sync::Arc;
 
-use rtw::{
+use crate::{
     camera::Camera,
     hittable::sphere::Sphere,
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal},
     utils,
 };
 
-fn scene1() {
+pub(crate) fn test_scene(file_name: &str) -> std::io::Result<()> {
     let camera = Camera::init()
         .aspect_ratio(16.0 / 9.0)
         .image_width(1000)
@@ -53,10 +53,10 @@ fn scene1() {
         Sphere::new(DVec3::new(1.0, 0.0, -1.0), 0.5, material_right.clone()),
     ];
 
-    camera.render(&world);
+    camera.render(&world, file_name)
 }
 
-fn scene2() {
+pub(crate) fn random_scene(file_name: &str) -> std::io::Result<()> {
     let mut world: Vec<Sphere> = vec![];
 
     let ground_material = Lambertian {
@@ -142,9 +142,5 @@ fn scene2() {
         .defocus_distance(10.0)
         .build();
 
-    cam.render(&world);
-}
-
-fn main() {
-    scene1();
+    cam.render(&world, file_name)
 }

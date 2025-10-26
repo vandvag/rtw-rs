@@ -87,7 +87,7 @@ impl Camera {
         CameraBuilder::default()
     }
 
-    pub fn render<T>(&self, world: &T)
+    pub fn render<T>(&self, world: &T, file_name: &str) -> std::io::Result<()>
     where
         T: Hittable,
     {
@@ -97,9 +97,12 @@ impl Camera {
             self.get_pixel_string(world)
         };
 
-        println!(
-            "P3\n{} {}\n255\n{}",
-            self.image_width, self.image_height, pixels
+        std::fs::write(
+            file_name,
+            format!(
+                "P3\n{} {}\n255\n{}\n",
+                self.image_width, self.image_height, pixels,
+            ),
         )
     }
 

@@ -1,13 +1,15 @@
 use clap::Parser;
+use rtw::render_scene;
 
 #[derive(Debug, clap::Parser)]
 struct Args {
     output: String,
 }
 
-fn main() {
-    println!("Hello from rtw-cli!");
-
+fn main() -> std::io::Result<()> {
     let args = Args::parse();
-    dbg!(args);
+
+    render_scene(&args.output)?;
+
+    Ok(())
 }
