@@ -7,6 +7,7 @@ use rand::Rng;
 use std::fmt::Display;
 
 use crate::{
+    RenderConfig,
     camera::builder::CameraBuilder,
     hittable::Hittable,
     ray::Ray,
@@ -87,18 +88,18 @@ impl Camera {
         CameraBuilder::default()
     }
 
-    pub fn render<T>(&self, world: &T, file_name: &str) -> std::io::Result<()>
+    pub fn render<T>(&self, world: &T, config: &RenderConfig) -> std::io::Result<()>
     where
         T: Hittable,
     {
-        let pixels = if MULTI_THREADED {
-            self.get_pixel_string_par(world)
-        } else {
+        let pixels = if config.single_threaded {
             self.get_pixel_string(world)
+        } else {
+            self.get_pixel_string_par(world)
         };
 
         std::fs::write(
-            file_name,
+            &config.output_file,
             format!(
                 "P3\n{} {}\n255\n{}\n",
                 self.image_width, self.image_height, pixels,

@@ -7,6 +7,11 @@ pub mod ray;
 
 pub mod utils;
 
-pub fn render_scene(file_name: &str) -> std::io::Result<()> {
-    crate::scenes::test_scene(file_name)
+pub struct RenderConfig {
+    pub single_threaded: bool,
+    pub output_file: String,
+}
+
+pub fn render_scene(config: &RenderConfig) -> std::io::Result<()> {
+    crate::scenes::test_scene(config)
 }
