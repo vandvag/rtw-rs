@@ -54,6 +54,7 @@ pub struct Camera {
     defocus_disk_v: DVec3,
 }
 
+// TODO: This should really be a struct with (r,g,b), that performs the conversion
 struct Color(DVec3);
 
 impl Display for Color {
@@ -76,14 +77,24 @@ impl Camera {
     where
         T: Hittable,
     {
+        let pixels = self.get_pixel_string(world);
+
+        println!(
+            "P3\n{} {}\n255\n{}",
+            self.image_width, self.image_height, pixels
+        )
+    }
+
+    fn get_pixel_string<T>(&self, world: &T) -> String
+    where
+        T: Hittable,
+    {
         let progress_style = ProgressStyle::default_bar()
             .template("Raytracing! [{bar:40.cyan/blue}] {pos:>3}/{len:3}")
             .expect("??")
             .progress_chars("=>-");
 
-        println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
-
-        let pixels = (0..self.image_height)
+        (0..self.image_height)
             .cartesian_product(0..self.image_width)
             .collect::<Vec<(u32, u32)>>()
             .into_iter()
@@ -91,9 +102,7 @@ impl Camera {
             .with_style(progress_style)
             .map(|(h, w)| format!("{}", Color(self.render_pixel(w, h, world))))
             .collect::<Vec<String>>()
-            .join("\n");
-
-        println!("{pixels}")
+            .join("\n")
     }
 
     fn render_pixel<T>(&self, width: u32, height: u32, world: &T) -> DVec3
@@ -271,3 +280,4 @@ fn sample_square() -> DVec3 {
     let mut rng = rand::rng();
     DVec3::new(rng.random::<f64>() - 0.5, rng.random::<f64>() - 0.5, 0.0)
 }
+
