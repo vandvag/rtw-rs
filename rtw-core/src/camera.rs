@@ -93,10 +93,10 @@ impl Camera {
     where
         T: Hittable,
     {
-        let pixels = if config.single_threaded {
-            self.get_pixel_string(world)
-        } else {
+        let pixels = if config.multi_threaded {
             self.get_pixel_string_par(world)
+        } else {
+            self.get_pixel_string(world)
         };
 
         std::fs::write(
