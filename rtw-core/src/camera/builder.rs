@@ -42,14 +42,15 @@ impl CameraBuilder {
 
         let center = self.look_from;
 
+        // u,v,w unit basis vectors for the camera coordinate frame
+        let w = (self.look_from - self.look_at).normalize();
+        let u = DVec3::cross(self.vup, w).normalize();
+        let v = DVec3::cross(w, u);
+
         let theta = self.vfov.to_radians();
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h * self.defocus_distance;
         let viewport_width = viewport_height * (self.image_width as f64 / image_height as f64);
-
-        let w = (self.look_from - self.look_at).normalize();
-        let u = DVec3::cross(self.vup, w).normalize();
-        let v = DVec3::cross(w, u);
 
         let viewport_u = viewport_width * u;
         let viewport_v = viewport_height * -v;
@@ -60,7 +61,7 @@ impl CameraBuilder {
         let viewport_upper_left =
             center - (viewport_u / 2.0) - (viewport_v / 2.0) - (self.defocus_distance * w);
         let pixel00_location = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-        let defocus_radius = self.defocus_distance * (self.defocus_angle.to_radians()).tan();
+        let defocus_radius = self.defocus_distance * ((self.defocus_angle/ 2.0).to_radians()).tan();
         let defocus_disk_u = u * defocus_radius;
         let defocus_disk_v = v * defocus_radius;
 

@@ -141,7 +141,7 @@ pub(crate) fn random_scene(config: &RenderConfig) -> std::io::Result<()> {
         .look_from(DVec3::new(13.0, 2.0, 3.0))
         .look_at(DVec3::new(0.0, 0.0, 0.0))
         .vup(DVec3::new(0.0, 1.0, 0.0))
-        .defocus_angle(0.6)
+        .defocus_angle(0.6 * 2.0 * std::f64::consts::PI / 180.0)
         .defocus_distance(10.0)
         .build();
 
