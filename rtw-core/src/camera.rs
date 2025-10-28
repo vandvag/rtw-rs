@@ -209,10 +209,7 @@ impl Camera {
             self.defocus_disk_sample()
         };
 
-        Ray {
-            origin: ray_origin,
-            direction: pixel_sample - self.center,
-        }
+        Ray::with_time(ray_origin, pixel_sample - self.center, Some(rand::rng().random()))
     }
 
     fn defocus_disk_sample(&self) -> DVec3 {

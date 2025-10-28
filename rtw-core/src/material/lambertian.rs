@@ -7,14 +7,14 @@ pub struct Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _ray: &Ray, hr: &HitRecord) -> Option<Scatter> {
+    fn scatter(&self, ray: &Ray, hr: &HitRecord) -> Option<Scatter> {
         let mut scatter_direction = hr.normal + random_unit_vector();
         if scatter_direction.abs_diff_eq(DVec3::ZERO, 1e-8) {
             scatter_direction = hr.normal;
         }
 
         let attenuation = self.albedo;
-        let scattered = Ray::new(hr.point, scatter_direction);
+        let scattered = Ray::with_time(hr.point, scatter_direction, ray.time);
 
         Some(Scatter {
             scattered,

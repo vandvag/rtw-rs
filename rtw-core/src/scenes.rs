@@ -43,15 +43,15 @@ pub(crate) fn test_scene(config: &RenderConfig) -> std::io::Result<()> {
     });
 
     let world = vec![
-        Sphere::new(
+        Sphere::stationary(
             DVec3::new(0.0, -100.5, -1.0),
             100.0,
             material_ground.clone(),
         ),
-        Sphere::new(DVec3::new(0.0, 0.0, -1.2), 0.5, material_center.clone()),
-        Sphere::new(DVec3::new(-1.0, 0.0, -1.0), 0.5, material_left.clone()),
-        Sphere::new(DVec3::new(-1.0, 0.0, -1.0), 0.4, material_bubble.clone()),
-        Sphere::new(DVec3::new(1.0, 0.0, -1.0), 0.5, material_right.clone()),
+        Sphere::stationary(DVec3::new(0.0, 0.0, -1.2), 0.5, material_center.clone()),
+        Sphere::stationary(DVec3::new(-1.0, 0.0, -1.0), 0.5, material_left.clone()),
+        Sphere::stationary(DVec3::new(-1.0, 0.0, -1.0), 0.4, material_bubble.clone()),
+        Sphere::stationary(DVec3::new(1.0, 0.0, -1.0), 0.5, material_right.clone()),
     ];
 
     camera.render(&world, config)
@@ -63,7 +63,7 @@ pub(crate) fn random_scene(config: &RenderConfig) -> std::io::Result<()> {
     let ground_material = Lambertian {
         albedo: DVec3::new(0.5, 0.5, 0.5),
     };
-    world.push(Sphere::new(
+    world.push(Sphere::stationary(
         DVec3::new(0.0, -1000.0, 0.0),
         1000.0,
         Arc::new(ground_material),
@@ -86,29 +86,19 @@ pub(crate) fn random_scene(config: &RenderConfig) -> std::io::Result<()> {
                     let mat = Lambertian {
                         albedo: utils::vec::random() * utils::vec::random(),
                     };
-                    world.push(Sphere {
-                        center,
-                        radius: 0.2,
-                        mat: Arc::new(mat),
-                    })
+                    let rand_num = rng.random_range(0.0..0.5);
+                    let center2 = DVec3::new(0.0, rand_num, 0.0);
+                    world.push(Sphere::moving(center, center2, 0.2, Arc::new(mat)));
                 } else if mat_choice < 0.9 {
                     let albedo = utils::vec::random_range(0.5..1.0);
                     let fuzz: f64 = rng.random_range(0.0..0.5);
                     let mat = Metal { albedo, fuzz };
-                    world.push(Sphere {
-                        center,
-                        radius: 0.2,
-                        mat: Arc::new(mat),
-                    })
+                    world.push(Sphere::stationary(center, 0.2, Arc::new(mat)));
                 } else {
                     let mat = Dielectric {
                         refraction_index: 1.5,
                     };
-                    world.push(Sphere {
-                        center,
-                        radius: 0.2,
-                        mat: Arc::new(mat),
-                    })
+                    world.push(Sphere::stationary(center, 0.2, Arc::new(mat)));
                 }
             }
         }
@@ -117,24 +107,36 @@ pub(crate) fn random_scene(config: &RenderConfig) -> std::io::Result<()> {
     let mat1 = Dielectric {
         refraction_index: 1.5,
     };
-    world.push(Sphere::new(DVec3::new(0.0, 1.0, 0.0), 1.0, Arc::new(mat1)));
+    world.push(Sphere::stationary(
+        DVec3::new(0.0, 1.0, 0.0),
+        1.0,
+        Arc::new(mat1),
+    ));
 
     let mat2 = Lambertian {
         albedo: DVec3::new(0.4, 0.2, 0.1),
     };
-    world.push(Sphere::new(DVec3::new(-4.0, 1.0, 0.0), 1.0, Arc::new(mat2)));
+    world.push(Sphere::stationary(
+        DVec3::new(-4.0, 1.0, 0.0),
+        1.0,
+        Arc::new(mat2),
+    ));
 
     let mat3 = Metal {
         albedo: DVec3::new(0.7, 0.6, 0.5),
         fuzz: 0.0,
     };
-    world.push(Sphere::new(DVec3::new(4.0, 1.0, 0.0), 1.0, Arc::new(mat3)));
+    world.push(Sphere::stationary(
+        DVec3::new(4.0, 1.0, 0.0),
+        1.0,
+        Arc::new(mat3),
+    ));
 
     let cam = Camera::init()
         .aspect_ratio(16.0 / 9.0)
-        .image_width(1200)
-        .samples_per_pixel(500)
-        .max_depth(50)
+        .image_width(400)
+        .samples_per_pixel(100)
+        .max_depth(20)
         .vfov(20.0)
         .look_from(DVec3::new(13.0, 2.0, 3.0))
         .look_at(DVec3::new(0.0, 0.0, 0.0))

@@ -25,5 +25,5 @@ fn main() -> std::io::Result<()> {
 
     render_scene(&scene, &RenderConfig::from(args))?;
 
-    Ok(())
+                Ok(())
 }

@@ -37,7 +37,7 @@ impl Material for Dielectric {
             refract(unit_direction, hr.normal, ri)
         };
 
-        let scattered = Ray::new(hr.point, direction);
+        let scattered = Ray::with_time(hr.point, direction, ray.time);
 
         Some(Scatter {
             scattered,
