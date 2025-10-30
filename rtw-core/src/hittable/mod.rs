@@ -1,9 +1,10 @@
-pub mod sphere;
+pub(crate) mod bvh_node;
+pub(crate) mod list;
+pub(crate) mod sphere;
 
 use glam::DVec3;
-use std::{ops::Range, sync::Arc};
-
-use crate::{material::Material, ray::Ray};
+use std::sync::Arc;
+use crate::{aabb::Aabb, material::Material, ray::Ray, utils::interval::Interval};
 
 pub struct HitRecord {
     pub point: DVec3,
@@ -39,22 +40,7 @@ impl HitRecord {
 }
 
 pub trait Hittable: Send + Sync {
-    fn hit(&self, ray: &Ray, interval: Range<f64>) -> Option<HitRecord>;
-}
+    fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord>;
 
-impl<T> Hittable for Vec<T>
-where
-    T: Hittable,
-{
-    fn hit(&self, ray: &Ray, interval: Range<f64>) -> Option<HitRecord> {
-        let (_closest_so_far, hr) = self.iter().fold((interval.end, None), |acc, object| {
-            if let Some(tmp) = object.hit(ray, interval.start..acc.0) {
-                (tmp.t, Some(tmp))
-            } else {
-                acc
-            }
-        });
-
-        hr
-    }
+    fn bounding_box(&self) -> Aabb;
 }

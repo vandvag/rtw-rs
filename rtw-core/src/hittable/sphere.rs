@@ -1,7 +1,9 @@
 use crate::{
+    aabb::Aabb,
     hittable::{HitRecord, Hittable},
     material::Material,
     ray::Ray,
+    utils::interval::Interval,
     Result, RtwError,
 };
 use glam::DVec3;
@@ -12,6 +14,7 @@ pub struct Sphere {
     pub radius: f64,
     pub mat: Arc<dyn Material>,
     pub new_center: Option<DVec3>,
+    pub bbox: Aabb,
 }
 
 impl Sphere {
@@ -19,11 +22,14 @@ impl Sphere {
         if radius <= 0.0 {
             return Err(RtwError::InvalidRadius(radius));
         }
+        let rvec = DVec3::splat(radius);
+        let bbox = Aabb::from_points(center - rvec, center + rvec)?;
         Ok(Self {
             center,
             radius,
             mat,
             new_center: None,
+            bbox,
         })
     }
 
@@ -36,11 +42,15 @@ impl Sphere {
         if radius <= 0.0 {
             return Err(RtwError::InvalidRadius(radius));
         }
+        let rvec = DVec3::splat(radius);
+        let bbox1 = Aabb::from_points(center - rvec, center + rvec)?;
+        let bbox2 = Aabb::from_points(center + new_center - rvec, center + new_center + rvec)?;
         Ok(Self {
             center,
             radius,
             mat,
             new_center: Some(new_center),
+            bbox: Aabb::from_aabbs(&bbox1, &bbox2),
         })
     }
 
@@ -58,8 +68,9 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, interval: Range<f64>) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord> {
         let current_center = self.current_center(ray);
+        let current_center = self.center;
         let oc = current_center - ray.origin;
         let a = ray.direction.length_squared();
         let h = ray.direction.dot(oc);
@@ -83,5 +94,9 @@ impl Hittable for Sphere {
         let p = ray.at(root);
         let normal = (p - current_center) / self.radius;
         Some(HitRecord::init(p, normal, root, ray, self.mat.clone()))
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox.clone()
     }
 }

@@ -2,6 +2,7 @@ use thiserror::Error;
 
 mod scenes;
 
+mod aabb;
 mod camera;
 mod hittable;
 mod material;

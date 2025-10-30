@@ -3,9 +3,8 @@ use rand::Rng;
 use std::sync::Arc;
 
 use crate::{
-    RenderConfig,
     camera::Camera,
-    hittable::sphere::Sphere,
+    hittable::{bvh_node::BvhNode, list::HittableList, sphere::Sphere},
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal},
     utils, RenderConfig, Result,
 };
@@ -69,6 +68,9 @@ pub(crate) fn test_scene(config: &RenderConfig) -> Result<()> {
         0.5,
         material_right.clone(),
     )?));
+
+    let world = BvhNode::from(world);
+
     camera.render(&world, config)
 }
 
@@ -152,9 +154,11 @@ pub(crate) fn random_scene(config: &RenderConfig) -> Result<()> {
         Arc::new(mat3),
     )?));
 
+    let world = BvhNode::from(world);
+
     let cam = Camera::init()
         .aspect_ratio(16.0 / 9.0)
-        .image_width(400)
+        .image_width(1000)
         .samples_per_pixel(100)
         .max_depth(20)
         .vfov(20.0)
