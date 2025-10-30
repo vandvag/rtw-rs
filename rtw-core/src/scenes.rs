@@ -7,10 +7,10 @@ use crate::{
     camera::Camera,
     hittable::sphere::Sphere,
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal},
-    utils,
+    utils, RenderConfig, Result,
 };
 
-pub(crate) fn test_scene(config: &RenderConfig) -> std::io::Result<()> {
+pub(crate) fn test_scene(config: &RenderConfig) -> Result<()> {
     let camera = Camera::init()
         .aspect_ratio(16.0 / 9.0)
         .image_width(1000)
@@ -42,32 +42,47 @@ pub(crate) fn test_scene(config: &RenderConfig) -> std::io::Result<()> {
         fuzz: 1.0,
     });
 
-    let world = vec![
-        Sphere::stationary(
-            DVec3::new(0.0, -100.5, -1.0),
-            100.0,
-            material_ground.clone(),
-        ),
-        Sphere::stationary(DVec3::new(0.0, 0.0, -1.2), 0.5, material_center.clone()),
-        Sphere::stationary(DVec3::new(-1.0, 0.0, -1.0), 0.5, material_left.clone()),
-        Sphere::stationary(DVec3::new(-1.0, 0.0, -1.0), 0.4, material_bubble.clone()),
-        Sphere::stationary(DVec3::new(1.0, 0.0, -1.0), 0.5, material_right.clone()),
-    ];
+    let mut world = HittableList::default();
 
+    world.add(Arc::new(Sphere::stationary(
+        DVec3::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground.clone(),
+    )?));
+    world.add(Arc::new(Sphere::stationary(
+        DVec3::new(0.0, 0.0, -1.2),
+        0.5,
+        material_center.clone(),
+    )?));
+    world.add(Arc::new(Sphere::stationary(
+        DVec3::new(-1.0, 0.0, -1.0),
+        0.5,
+        material_left.clone(),
+    )?));
+    world.add(Arc::new(Sphere::stationary(
+        DVec3::new(-1.0, 0.0, -1.0),
+        0.4,
+        material_bubble.clone(),
+    )?));
+    world.add(Arc::new(Sphere::stationary(
+        DVec3::new(1.0, 0.0, -1.0),
+        0.5,
+        material_right.clone(),
+    )?));
     camera.render(&world, config)
 }
 
-pub(crate) fn random_scene(config: &RenderConfig) -> std::io::Result<()> {
-    let mut world: Vec<Sphere> = vec![];
+pub(crate) fn random_scene(config: &RenderConfig) -> Result<()> {
+    let mut world = HittableList::default();
 
     let ground_material = Lambertian {
         albedo: DVec3::new(0.5, 0.5, 0.5),
     };
-    world.push(Sphere::stationary(
+    world.add(Arc::new(Sphere::stationary(
         DVec3::new(0.0, -1000.0, 0.0),
         1000.0,
         Arc::new(ground_material),
-    ));
+    )?));
 
     let mut rng = rand::rng();
 
@@ -88,17 +103,22 @@ pub(crate) fn random_scene(config: &RenderConfig) -> std::io::Result<()> {
                     };
                     let rand_num = rng.random_range(0.0..0.5);
                     let center2 = DVec3::new(0.0, rand_num, 0.0);
-                    world.push(Sphere::moving(center, center2, 0.2, Arc::new(mat)));
+                    world.add(Arc::new(Sphere::moving(
+                        center,
+                        center2,
+                        0.2,
+                        Arc::new(mat),
+                    )?));
                 } else if mat_choice < 0.9 {
                     let albedo = utils::vec::random_range(0.5..1.0);
                     let fuzz: f64 = rng.random_range(0.0..0.5);
                     let mat = Metal { albedo, fuzz };
-                    world.push(Sphere::stationary(center, 0.2, Arc::new(mat)));
+                    world.add(Arc::new(Sphere::stationary(center, 0.2, Arc::new(mat))?));
                 } else {
                     let mat = Dielectric {
                         refraction_index: 1.5,
                     };
-                    world.push(Sphere::stationary(center, 0.2, Arc::new(mat)));
+                    world.add(Arc::new(Sphere::stationary(center, 0.2, Arc::new(mat))?));
                 }
             }
         }
@@ -107,30 +127,30 @@ pub(crate) fn random_scene(config: &RenderConfig) -> std::io::Result<()> {
     let mat1 = Dielectric {
         refraction_index: 1.5,
     };
-    world.push(Sphere::stationary(
+    world.add(Arc::new(Sphere::stationary(
         DVec3::new(0.0, 1.0, 0.0),
         1.0,
         Arc::new(mat1),
-    ));
+    )?));
 
     let mat2 = Lambertian {
         albedo: DVec3::new(0.4, 0.2, 0.1),
     };
-    world.push(Sphere::stationary(
+    world.add(Arc::new(Sphere::stationary(
         DVec3::new(-4.0, 1.0, 0.0),
         1.0,
         Arc::new(mat2),
-    ));
+    )?));
 
     let mat3 = Metal {
         albedo: DVec3::new(0.7, 0.6, 0.5),
         fuzz: 0.0,
     };
-    world.push(Sphere::stationary(
+    world.add(Arc::new(Sphere::stationary(
         DVec3::new(4.0, 1.0, 0.0),
         1.0,
         Arc::new(mat3),
-    ));
+    )?));
 
     let cam = Camera::init()
         .aspect_ratio(16.0 / 9.0)

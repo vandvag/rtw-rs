@@ -1,10 +1,11 @@
-use std::ops::Range;
-use std::sync::Arc;
-
-use crate::hittable::{HitRecord, Hittable};
-use crate::material::Material;
-use crate::ray::Ray;
+use crate::{
+    hittable::{HitRecord, Hittable},
+    material::Material,
+    ray::Ray,
+    Result, RtwError,
+};
 use glam::DVec3;
+use std::sync::Arc;
 
 pub struct Sphere {
     pub center: DVec3,
@@ -14,30 +15,40 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn stationary(center: DVec3, radius: f64, mat: Arc<dyn Material>) -> Self {
-        assert!(radius >= 0.0, "Sphere radius must be non-negative");
-        Self {
+    pub fn stationary(center: DVec3, radius: f64, mat: Arc<dyn Material>) -> Result<Self> {
+        if radius <= 0.0 {
+            return Err(RtwError::InvalidRadius(radius));
+        }
+        Ok(Self {
             center,
             radius,
             mat,
             new_center: None,
-        }
+        })
     }
 
-    pub fn moving(center: DVec3, new_center: DVec3, radius: f64, mat: Arc<dyn Material>) -> Self {
-        Self {
+    pub fn moving(
+        center: DVec3,
+        new_center: DVec3,
+        radius: f64,
+        mat: Arc<dyn Material>,
+    ) -> Result<Self> {
+        if radius <= 0.0 {
+            return Err(RtwError::InvalidRadius(radius));
+        }
+        Ok(Self {
             center,
             radius,
             mat,
             new_center: Some(new_center),
-        }
+        })
     }
 
     fn current_center(&self, ray: &Ray) -> DVec3 {
         if let Some(center2) = self.new_center {
             if let Some(current_time) = ray.time {
                 self.center + current_time * center2
-            } else { 
+            } else {
                 self.center
             }
         } else {

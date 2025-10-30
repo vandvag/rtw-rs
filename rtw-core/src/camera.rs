@@ -6,15 +6,15 @@ use itertools::Itertools;
 use rand::Rng;
 use std::{
     fmt::Display,
-    sync::{Arc, atomic::AtomicU64},
+    sync::{atomic::AtomicU64, Arc},
 };
 
 use crate::{
-    RenderConfig,
     camera::builder::CameraBuilder,
     hittable::Hittable,
     ray::Ray,
     utils::{gamma::linear_to_gamma, vec::random_in_unit_disk},
+    RenderConfig, Result, RtwError,
 };
 
 #[allow(dead_code)]
@@ -89,7 +89,7 @@ impl Camera {
         CameraBuilder::default()
     }
 
-    pub fn render<T>(&self, world: &T, config: &RenderConfig) -> std::io::Result<()>
+    pub fn render<T>(&self, world: &T, config: &RenderConfig) -> Result<()>
     where
         T: Hittable,
     {
@@ -106,6 +106,8 @@ impl Camera {
                 self.image_width, self.image_height, pixels,
             ),
         )
+        .map_err(|err| RtwError::IoError(err.to_string()))
+        //TODO: Map this properly
     }
 
     fn get_pixel_string_par<T>(&self, world: &T) -> String
@@ -209,7 +211,11 @@ impl Camera {
             self.defocus_disk_sample()
         };
 
-        Ray::with_time(ray_origin, pixel_sample - self.center, Some(rand::rng().random()))
+        Ray::with_time(
+            ray_origin,
+            pixel_sample - self.center,
+            Some(rand::rng().random()),
+        )
     }
 
     fn defocus_disk_sample(&self) -> DVec3 {

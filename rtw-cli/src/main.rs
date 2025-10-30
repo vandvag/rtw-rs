@@ -1,5 +1,5 @@
 use clap::Parser;
-use rtw::{RenderConfig, render_scene};
+use rtw::{render_scene, RenderConfig};
 
 #[derive(Debug, clap::Parser)]
 struct Args {
@@ -19,11 +19,11 @@ impl From<Args> for RenderConfig {
     }
 }
 
-fn main() -> std::io::Result<()> {
+fn main() -> rtw::Result<()> {
     let args = Args::parse();
     let scene = args.scene.to_owned();
 
     render_scene(&scene, &RenderConfig::from(args))?;
 
-                Ok(())
+    Ok(())
 }
