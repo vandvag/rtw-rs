@@ -2,14 +2,16 @@ pub(crate) mod bvh_node;
 pub(crate) mod list;
 pub(crate) mod sphere;
 
+use crate::{aabb::Aabb, material::Material, ray::Ray, utils::interval::Interval};
 use glam::DVec3;
 use std::sync::Arc;
-use crate::{aabb::Aabb, material::Material, ray::Ray, utils::interval::Interval};
 
 pub struct HitRecord {
     pub point: DVec3,
     pub normal: DVec3,
     pub t: f64,
+    pub u: f64,
+    pub v: f64,
     pub front_face: bool,
     pub material: Arc<dyn Material>,
 }
@@ -35,6 +37,8 @@ impl HitRecord {
             t,
             front_face,
             material: mat,
+            u: 0.0,
+            v: 0.0,
         }
     }
 }

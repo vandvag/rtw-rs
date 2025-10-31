@@ -1,9 +1,27 @@
+use crate::{
+    hittable::HitRecord,
+    material::{Material, Scatter},
+    ray::Ray,
+    texture::{Texture, solid::SolidColor},
+    utils::vec::random_unit_vector,
+};
 use glam::DVec3;
-
-use crate::{hittable::HitRecord, material::{Material, Scatter}, ray::Ray, utils::vec::random_unit_vector};
+use std::sync::Arc;
 
 pub struct Lambertian {
-    pub albedo: DVec3
+    pub texture: Arc<dyn Texture>,
+}
+
+impl Lambertian {
+    pub fn from_color(albedo: DVec3) -> Self {
+        Self {
+            texture: Arc::new(SolidColor::new(albedo)),
+        }
+    }
+
+    pub fn from_texture(texture: Arc<dyn Texture>) -> Self {
+        Self { texture }
+    }
 }
 
 impl Material for Lambertian {
@@ -13,12 +31,12 @@ impl Material for Lambertian {
             scatter_direction = hr.normal;
         }
 
-        let attenuation = self.albedo;
+        let attenuation = self.texture.value(hr.u, hr.v, hr.point);
         let scattered = Ray::with_time(hr.point, scatter_direction, ray.time);
 
         Some(Scatter {
             scattered,
-            attenuation
+            attenuation,
         })
     }
 }

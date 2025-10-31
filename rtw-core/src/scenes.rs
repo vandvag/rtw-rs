@@ -3,10 +3,12 @@ use rand::Rng;
 use std::sync::Arc;
 
 use crate::{
+    RenderConfig, Result,
     camera::Camera,
     hittable::{bvh_node::BvhNode, list::HittableList, sphere::Sphere},
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal},
-    utils, RenderConfig, Result,
+    texture::checker::Checker,
+    utils,
 };
 
 pub(crate) fn test_scene(config: &RenderConfig) -> Result<()> {
@@ -20,13 +22,9 @@ pub(crate) fn test_scene(config: &RenderConfig) -> Result<()> {
         .vup(DVec3::new(0.0, 1.0, 0.0))
         .build();
 
-    let material_ground = Arc::new(Lambertian {
-        albedo: DVec3::new(0.8, 0.8, 0.0),
-    });
+    let material_ground = Arc::new(Lambertian::from_color(DVec3::new(0.8, 0.8, 0.0)));
 
-    let material_center = Arc::new(Lambertian {
-        albedo: DVec3::new(0.1, 0.2, 0.5),
-    });
+    let material_center = Arc::new(Lambertian::from_color(DVec3::new(0.1, 0.2, 0.5)));
 
     let material_left = Arc::new(Dielectric {
         refraction_index: 1.5,
@@ -77,13 +75,12 @@ pub(crate) fn test_scene(config: &RenderConfig) -> Result<()> {
 pub(crate) fn random_scene(config: &RenderConfig) -> Result<()> {
     let mut world = HittableList::default();
 
-    let ground_material = Lambertian {
-        albedo: DVec3::new(0.5, 0.5, 0.5),
-    };
+    let checker = Checker::from_colors(0.32, DVec3::new(0.2, 0.3, 0.1), DVec3::new(0.9, 0.9, 0.9));
+    let material_ground = Lambertian::from_texture(Arc::new(checker));
     world.add(Arc::new(Sphere::stationary(
         DVec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Arc::new(ground_material),
+        Arc::new(material_ground),
     )?));
 
     let mut rng = rand::rng();
@@ -100,9 +97,7 @@ pub(crate) fn random_scene(config: &RenderConfig) -> Result<()> {
             let random_point = DVec3::new(4.0, 0.2, 0.0);
             if (center - random_point).length() > 0.9 {
                 if mat_choice < 0.8 {
-                    let mat = Lambertian {
-                        albedo: utils::vec::random() * utils::vec::random(),
-                    };
+                    let mat = Lambertian::from_color(utils::vec::random() * utils::vec::random());
                     let rand_num = rng.random_range(0.0..0.5);
                     let center2 = DVec3::new(0.0, rand_num, 0.0);
                     world.add(Arc::new(Sphere::moving(
@@ -135,9 +130,7 @@ pub(crate) fn random_scene(config: &RenderConfig) -> Result<()> {
         Arc::new(mat1),
     )?));
 
-    let mat2 = Lambertian {
-        albedo: DVec3::new(0.4, 0.2, 0.1),
-    };
+    let mat2 = Lambertian::from_color(DVec3::new(0.4, 0.2, 0.1));
     world.add(Arc::new(Sphere::stationary(
         DVec3::new(-4.0, 1.0, 0.0),
         1.0,

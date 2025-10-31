@@ -61,7 +61,7 @@ pub struct Camera {
     defocus_disk_v: DVec3,
 }
 
-struct Color {
+pub struct Color {
     r: u8,
     g: u8,
     b: u8,

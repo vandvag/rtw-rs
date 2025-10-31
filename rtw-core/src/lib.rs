@@ -8,6 +8,7 @@ mod hittable;
 mod material;
 mod ray;
 mod utils;
+mod texture;
 
 pub struct RenderConfig {
     pub multi_threaded: bool,
